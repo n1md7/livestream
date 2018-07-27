@@ -1,0 +1,120 @@
+{{#if liveId}}
+	{{liveId}}
+<script>
+	var socket = io.connect();
+	//try to open the door to enter there
+	socket.emit('roomId', "{{liveId}}");
+	//on successfull try get internal data
+	socket.on('roomData', function(resp){
+		console.log(resp)
+	});
+
+	socket.on('roomMsg', function(resp){
+		console.log('you have succesfffully conncesjkadh asdhksaj')
+	});
+</script>
+{{else}}
+<div class="container my-5 pb-5">
+	<div class="row justify-content-center">
+		<div class="col col-6 text-center mb-5">
+			<h1 class="text-dark">Video <kbd>Live</kbd> Stream</h1>
+		</div>
+		<div class="w-100"></div>
+		<div class="col col-6 text-center">
+			<input type="text" class="js-name form-control rounded-0 mb-1" placeholder="Name" autofocus="true">			
+		</div>
+		<div class="w-100"></div>
+		<div class="col col-6 text-center">
+			<input type="text" class="js-description form-control rounded-0" placeholder="Description">
+		</div>
+		<div class="w-100"></div>
+		<div class="col col-6 text-center mt-1">
+			<button class="btn btn-danger js-create rounded-0 w-100">GO LIVE <i class="fa fa-video-camera"></i> </button> 
+		</div>
+	</div>
+	<div class="row justify-content-center my-5">
+		<div class="col col-6 text-center js-lives">
+			<h3 class="text-secondary js-lives-title">Live videos <span class="badge badge-primary js-live-counter">0</span></h3>
+			<table class="table table-striped js-table"></table>
+		</div>
+	</div>
+</div>
+<script>
+
+    var socket = io.connect();
+
+    $('.js-create').click(function(){
+    	var name = $('.js-name'),
+    		description = $('.js-description');
+    	if(name.val().length === 0 || description.val().length === 0){
+    		swal('Error', 'Please type something', 'error');
+    		return;
+    	}	
+    	socket.emit('createRoom', {
+    		name: name.val(),
+    		description: description.val()
+    	});
+    });
+
+ 
+
+    socket.on('roomMsg', function(msg){
+    	console.log(msg)
+    });
+
+    socket.on('allVideos', function(videos){
+    	Render.table(videos);
+    });
+
+	socket.emit('loadVideos', 'lemmeJoin');
+
+    var Render = {
+    	table:function(videos) {
+    		console.log(videos);
+	    	if(videos.length === 0){
+
+	    		return;
+	    	}
+
+	    	//update live video conuter
+	    	jQuery('.js-live-counter').text(videos.length);
+
+	    	// create Table head
+	    	jQuery('.js-table').html(`
+					<thead>
+						<tr>
+							<th scope="col">#</th>
+							<th scope="col">Name</th>
+							<th scope="col">Description</th>
+							<th scope="col">Action</th>
+						</tr>
+					</thead>
+	    		`);
+	    	//tbody
+	    	jQuery('.js-table').append('<tbody class="js-tbody"></tbody>');
+
+	    	videos.forEach(function(video, i){
+	    		// create tbody rows
+	    		jQuery('.js-tbody').append(function(){
+	    			return `
+	    				<tr>
+							<th class="align-middle" scope="row">${i+1}</th>
+							<td class="align-middle">${video.name}</td>
+							<td class="align-middle">${video.description}</td>
+							<td class="align-middle">
+								<button data-stream="${video.id}" class="js-stream-connect btn btn-warning">Connect <i class="fa fa-plug"></i> </button>
+							</td>
+						</tr>
+	    			`;
+	    		});
+	    	});
+    	}
+    };
+
+    $(document).on('click','.js-stream-connect', function(){
+    	window.location.href += $(this).data('stream');
+    });
+
+</script>
+
+{{/if}}
